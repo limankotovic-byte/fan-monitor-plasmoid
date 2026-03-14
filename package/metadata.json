@@ -1,0 +1,19 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "liman",
+                "Email": "info@example.com"
+            }
+        ],
+        "Category": "System Information",
+        "Description": "Monitor CPU and GPU fans",
+        "Icon": "computer",
+        "Id": "com.liman.fanmonitor",
+        "Name": "Fan Monitor",
+        "Version": "1.2"
+    },
+    "KPackageStructure": "Plasma/Applet",
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-Requires-Config": "true"
+}

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+    <kcfgfile name=""/>
+
+    <group name="General">
+        <entry name="updateInterval" type="int">
+            <label>Update Interval (ms)</label>
+            <default>2000</default>
+        </entry>
+        
+        <entry name="showTemperature" type="bool">
+            <label>Show Temperatures</label>
+            <default>true</default>
+        </entry>
+        
+        <entry name="showFanSpeed" type="bool">
+            <label>Show Fan Speeds</label>
+            <default>true</default>
+        </entry>
+        
+        <entry name="fanSpeedUnit" type="string">
+            <label>Fan Speed Unit</label>
+            <default>RPM</default>
+        </entry>
+        
+        <entry name="warningThreshold" type="int">
+            <label>Warning Threshold (RPM)</label>
+            <default>3000</default>
+        </entry>
+        
+        <entry name="criticalThreshold" type="int">
+            <label>Critical Threshold (RPM)</label>
+            <default>4000</default>
+        </entry>
+        
+        <entry name="enableNotifications" type="bool">
+            <label>Enable Notifications</label>
+            <default>true</default>
+        </entry>
+        
+        <entry name="temperatureWarning" type="int">
+            <label>Temperature Warning Threshold (°C)</label>
+            <default>70</default>
+        </entry>
+        
+        <entry name="temperatureCritical" type="int">
+            <label>Temperature Critical Threshold (°C)</label>
+            <default>80</default>
+        </entry>
+
+        <entry name="timeRange" type="int">
+            <label>Time Range for Chart (hours)</label>
+            <default>2</default>
+        </entry>
+        
+        <entry name="themeIndex" type="int">
+            <label>Widget Theme</label>
+            <default>0</default>
+        </entry>
+
+        <entry name="enableAnimation" type="bool">
+            <label>Enable Fan Animation</label>
+            <default>false</default>
+        </entry>
+    </group>
+</kcfg>
