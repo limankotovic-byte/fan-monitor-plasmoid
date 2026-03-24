@@ -11,7 +11,7 @@
         "Icon": "computer",
         "Id": "com.liman.fanmonitor",
         "Name": "Fan Monitor",
-        "Version": "1.2"
+        "Version": "1.1"
     },
     "KPackageStructure": "Plasma/Applet",
     "X-Plasma-API-Minimum-Version": "6.0",

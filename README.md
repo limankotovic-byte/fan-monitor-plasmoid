@@ -1,8 +1,10 @@
 # Fan Monitor (KDE Plasma 6 Widget)
 
+![Version](https://img.shields.io/badge/version-1.1-blue)
+![Plasma](https://img.shields.io/badge/KDE%20Plasma-6.0%2B-green)
+![License](https://img.shields.io/badge/license-GPL%20v3.0-orange)
+
 ![Screenshot](preview_en.png)
-
-
 
 A beautiful, translucent fan and temperature monitoring widget for KDE Plasma 6. Designed to blend perfectly with neon and translucent themes (like *"Utterly Sweet"*), while offering custom aesthetic adjustments and **zero CPU/GPU overhead** animations.
 
@@ -40,6 +42,30 @@ Run the `sensors-detect` command once to ensure your kernel is reading all avail
 ```bash
 sudo sensors-detect
 ```
+
+## What's New in v1.1
+
+See [CHANGELOG.md](CHANGELOG.md) for the full list of changes.
+
+**Highlights:**
+- 🔧 Eliminated code duplication (5+ repeated loops → helper functions)
+- 🐛 Fixed crash on empty sensor data
+- 🐛 Fixed regex validation preventing empty keys
+- ⚡ Canvas performance optimization (`Canvas.Cooperative`)
+- 📐 Replaced magic numbers with named constants
+- 📝 Added JSDoc comments to all functions
+- 🔄 Fixed history data leak on time range change
+- 📋 Consistent code formatting throughout
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 Provided under the GNU GPL v3.0 License.
