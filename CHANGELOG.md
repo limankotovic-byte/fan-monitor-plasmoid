@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.3.0] - 2026-09-18
+
+### Graph & History
+- Fixed graph history being cleared when switching between 2h, 5h, and 8h ranges
+- History retention is now independent of the selected viewport and keeps up to 8 hours of one-minute buckets
+- Fixed the graph appearing frozen after running for a while by advancing the chart clock independently of sensor changes
+- Fixed stale Canvas contents when history becomes empty or is rebuilt
+- Manual refresh no longer inserts a duplicate graph point before fresh sensor data arrives
+
+### Sensors & Settings
+- Fixed temperature parsing for normal `lm-sensors` lines that include `high`, `crit`, or `low` thresholds on the same line
+- Fan RPM parsing is now case-insensitive and accepts generic labelled RPM readings
+- Fixed `showTemperature` and `showFanSpeed` boolean defaults so disabling them actually works
+- Fixed update interval seconds/milliseconds conversion in the configuration UI
+
+### Maintenance
+- Updated version metadata and configuration UI to 1.3.0
+- Refreshed README release notes and replaced the inaccurate zero-overhead claim with low-overhead wording
+- Removed placeholder author email from plugin metadata
+
 ## [1.1] - 2026-03-24
 
 ### 🔧 Code Quality & Bug Fixes
