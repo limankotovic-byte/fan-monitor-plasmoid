@@ -3,7 +3,7 @@
         "Authors": [
             {
                 "Name": "liman",
-                "Email": "info@example.com"
+                "Email": ""
             }
         ],
         "Category": "System Information",
@@ -11,7 +11,7 @@
         "Icon": "computer",
         "Id": "com.liman.fanmonitor",
         "Name": "Fan Monitor",
-        "Version": "1.1"
+        "Version": "1.3.0"
     },
     "KPackageStructure": "Plasma/Applet",
     "X-Plasma-API-Minimum-Version": "6.0",

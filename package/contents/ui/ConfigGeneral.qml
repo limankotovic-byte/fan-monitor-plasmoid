@@ -7,13 +7,12 @@ import org.kde.kcmutils as KCM
 KCM.SimpleKCM {
     id: page
 
-    property alias cfg_updateInterval: updateIntervalSpinBox.value
+    property int cfg_updateInterval: 2000
     property alias cfg_showTemperature: showTemperatureCheckBox.checked
     property alias cfg_showFanSpeed: showFanSpeedCheckBox.checked
     property alias cfg_fanSpeedUnit: fanSpeedUnitField.text
     property alias cfg_warningThreshold: warningThresholdSpinBox.value
     property alias cfg_criticalThreshold: criticalThresholdSpinBox.value
-    property alias cfg_enableNotifications: enableNotificationsCheckBox.checked
     property alias cfg_themeIndex: themeComboBox.currentIndex
     property alias cfg_enableAnimation: enableAnimationCheckBox.checked
     property alias cfg_temperatureWarning: temperatureWarningSpinBox.value
@@ -33,7 +32,7 @@ KCM.SimpleKCM {
             Kirigami.FormData.label: "Update Interval (sec):"
             from: 1
             to: 60
-            value: 2
+            value: Math.max(1, Math.round(cfg_updateInterval / 1000))
             stepSize: 1
 
             textFromValue: function(value, locale) {
@@ -44,12 +43,8 @@ KCM.SimpleKCM {
                 return parseInt(text)
             }
 
-            onValueChanged: {
+            onValueModified: {
                 cfg_updateInterval = value * 1000
-            }
-
-            Component.onCompleted: {
-                value = cfg_updateInterval / 1000
             }
         }
 
@@ -158,18 +153,6 @@ KCM.SimpleKCM {
             }
         }
 
-        // Notifications
-        Kirigami.Separator {
-            Kirigami.FormData.label: "Notifications"
-            Kirigami.FormData.isSection: true
-        }
-
-        QQC2.CheckBox {
-            id: enableNotificationsCheckBox
-            Kirigami.FormData.label: "Enable Notifications:"
-            checked: true
-        }
-
         // Appearance
         Kirigami.Separator {
             Kirigami.FormData.label: "Appearance"
@@ -197,7 +180,7 @@ KCM.SimpleKCM {
 
         QQC2.Label {
             Kirigami.FormData.label: "Version:"
-            text: "1.1"
+            text: "1.3.0"
         }
 
         QQC2.Label {
