@@ -2,6 +2,9 @@
 
 ## [1.3.0] - 2026-09-18
 
+### UI
+- Restored the compact panel RPM number to the cyan → purple → pink gradient used by the fan icon
+
 ### Graph & History
 - Fixed graph history being cleared when switching between 2h, 5h, and 8h ranges
 - History retention is now independent of the selected viewport and keeps up to 8 hours of one-minute buckets
