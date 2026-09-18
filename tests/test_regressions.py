@@ -48,6 +48,23 @@ Fan 1:         1200 RPM
         self.assertIn(r'line.match(/^(.+?):\s*\+?(-?\d+(?:\.\d+)?)\s*°C\b/i)', MAIN)
 
 
+class CompactUiRegressionTests(unittest.TestCase):
+    def test_compact_rpm_text_uses_same_gradient_palette_as_fan(self):
+        compact = re.search(
+            r"compactRepresentation: Item \{(.*?)// ==========================================\n    // FULL REPRESENTATION",
+            MAIN,
+            re.S,
+        )
+        self.assertIsNotNone(compact)
+        block = compact.group(1)
+        self.assertIn("id: textCanvasCompact", block)
+        self.assertIn("ctx.createLinearGradient(0, 0, width, height)", block)
+        self.assertIn("gradient.addColorStop(0, colorAccentCyan.toString())", block)
+        self.assertIn("gradient.addColorStop(0.5, colorAccentPurple.toString())", block)
+        self.assertIn("gradient.addColorStop(1, colorAccentPink.toString())", block)
+        self.assertIn("ctx.fillText(parent.rpmText, 0, height / 2)", block)
+
+
 class GraphRegressionTests(unittest.TestCase):
     def test_history_is_independent_of_selected_viewport(self):
         self.assertIn("readonly property int kMaxHistoryHours: 8", MAIN)
