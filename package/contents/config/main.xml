@@ -33,11 +33,6 @@
             <default>4000</default>
         </entry>
         
-        <entry name="enableNotifications" type="bool">
-            <label>Enable Notifications</label>
-            <default>true</default>
-        </entry>
-        
         <entry name="temperatureWarning" type="int">
             <label>Temperature Warning Threshold (°C)</label>
             <default>70</default>
