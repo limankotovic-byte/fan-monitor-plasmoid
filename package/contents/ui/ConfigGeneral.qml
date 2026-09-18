@@ -13,7 +13,6 @@ KCM.SimpleKCM {
     property alias cfg_fanSpeedUnit: fanSpeedUnitField.text
     property alias cfg_warningThreshold: warningThresholdSpinBox.value
     property alias cfg_criticalThreshold: criticalThresholdSpinBox.value
-    property alias cfg_enableNotifications: enableNotificationsCheckBox.checked
     property alias cfg_themeIndex: themeComboBox.currentIndex
     property alias cfg_enableAnimation: enableAnimationCheckBox.checked
     property alias cfg_temperatureWarning: temperatureWarningSpinBox.value
@@ -152,18 +151,6 @@ KCM.SimpleKCM {
             valueFromText: function(text, locale) {
                 return parseInt(text)
             }
-        }
-
-        // Notifications
-        Kirigami.Separator {
-            Kirigami.FormData.label: "Notifications"
-            Kirigami.FormData.isSection: true
-        }
-
-        QQC2.CheckBox {
-            id: enableNotificationsCheckBox
-            Kirigami.FormData.label: "Enable Notifications:"
-            checked: true
         }
 
         // Appearance
