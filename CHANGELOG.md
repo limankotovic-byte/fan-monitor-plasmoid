@@ -19,6 +19,8 @@
 - Updated version metadata and configuration UI to 1.3.0
 - Refreshed README release notes and replaced the inaccurate zero-overhead claim with low-overhead wording
 - Removed placeholder author email from plugin metadata
+- Removed the unused notifications toggle/config entry
+- Removed the unused legacy `SensorsReader.qml` simulation component
 
 ## [1.1] - 2026-03-24
 
