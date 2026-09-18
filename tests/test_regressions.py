@@ -44,8 +44,8 @@ Fan 1:         1200 RPM
         self.assertEqual(temps["temp1"], -3.5)
 
     def test_qml_contains_the_regression_fixed_patterns(self):
-        self.assertIn(r'line.match(/^(.+?):\\s*(\\d+)\\s*RPM\\b/i)', MAIN)
-        self.assertIn(r'line.match(/^(.+?):\\s*\\+?(-?\\d+(?:\\.\\d+)?)\\s*°C\\b/i)', MAIN)
+        self.assertIn(r'line.match(/^(.+?):\s*(\d+)\s*RPM\b/i)', MAIN)
+        self.assertIn(r'line.match(/^(.+?):\s*\+?(-?\d+(?:\.\d+)?)\s*°C\b/i)', MAIN)
 
 
 class GraphRegressionTests(unittest.TestCase):
