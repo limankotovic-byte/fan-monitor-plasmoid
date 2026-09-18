@@ -22,6 +22,9 @@ PlasmoidItem {
     readonly property int kMaxRpmForSpeedFactor: 4000 // RPM value mapped to max animation speed
     readonly property int kIdleUpdateInterval: 30000  // Sensor poll interval when panel is closed
     readonly property int kChartRefreshInterval: 30000 // Chart horizontal-slide refresh (ms)
+    readonly property int kHistoryBucketMs: 60000     // Store one graph bucket per minute
+    readonly property int kMaxHistoryHours: 8         // Keep enough data for the widest graph range
+    readonly property int kMaxHistoryPoints: 480      // 8 hours at one point per minute
     readonly property int kMinSensorOutputLen: 10     // Min chars for valid sensor output
     readonly property int kYAxisSteps: 5              // Number of Y-axis grid divisions
 
@@ -29,8 +32,10 @@ PlasmoidItem {
     // CONFIGURATION PROPERTIES
     // ==========================================
     property int updateInterval: plasmoid.configuration.updateInterval || 5000
-    property bool showTemperature: plasmoid.configuration.showTemperature || true
-    property bool showFanSpeed: plasmoid.configuration.showFanSpeed || true
+    property bool showTemperature: plasmoid.configuration.showTemperature !== undefined
+                                   ? plasmoid.configuration.showTemperature : true
+    property bool showFanSpeed: plasmoid.configuration.showFanSpeed !== undefined
+                                ? plasmoid.configuration.showFanSpeed : true
     property string fanSpeedUnit: plasmoid.configuration.fanSpeedUnit || "RPM"
     property int warningThreshold: plasmoid.configuration.warningThreshold || 3000
     property int criticalThreshold: plasmoid.configuration.criticalThreshold || 4000
@@ -46,8 +51,8 @@ PlasmoidItem {
     property string lastError: ""
 
     property var fanHistory: []
-    property int maxHistoryPoints: 120
     property real _lastHistoryTime: 0
+    property real chartNow: Date.now()
 
     property int timeRange: plasmoid.configuration.timeRange || 2  // in hours
     property int themeIndex: plasmoid.configuration.themeIndex !== undefined ? plasmoid.configuration.themeIndex : 0
@@ -357,9 +362,9 @@ PlasmoidItem {
                         if (currentIndex >= 0 && currentIndex < timeRangeOptions.length) {
                             timeRange = timeRangeOptions[currentIndex].value
                             plasmoid.configuration.timeRange = timeRange
-                            maxHistoryPoints = timeRangeOptions[currentIndex].points
-                            // Clear history on range change for proper scaling
-                            clearAndResetHistory()
+                            chartNow = Date.now()
+                            gridCanvas.requestPaint()
+                            chartCanvas.requestPaint()
                         }
                     }
                 }
@@ -370,12 +375,10 @@ PlasmoidItem {
                     text: "Refresh"
                     icon.name: "view-refresh"
                     onClicked: {
+                        chartNow = Date.now()
                         updateSensorData()
-                        // Manual point plot
-                        let maxSpd = getMaxFanSpeed()
-                        if (maxSpd > 0) {
-                            addFanSpeed(maxSpd, true)
-                        }
+                        gridCanvas.requestPaint()
+                        chartCanvas.requestPaint()
                     }
                 }
             }
@@ -514,10 +517,10 @@ PlasmoidItem {
                                 anchors.fill: parent
                                 renderStrategy: Canvas.Cooperative
                                 onPaint: {
-                                    if (fanHistory.length < 2) return
-
                                     let ctx = getContext("2d")
                                     ctx.clearRect(0, 0, width, height)
+
+                                    if (fanHistory.length < 2) return
 
                                     let gradient = ctx.createLinearGradient(0, height, 0, 0)
                                     gradient.addColorStop(0, colorAccentCyan)
@@ -530,7 +533,7 @@ PlasmoidItem {
 
                                     ctx.beginPath()
 
-                                    let now = Date.now()
+                                    let now = chartNow
                                     let rangeMs = timeRange * 3600 * 1000
 
                                     for (let i = 0; i < fanHistory.length; i++) {
@@ -597,7 +600,7 @@ PlasmoidItem {
                                 model: timeRange + 1
                                 Text {
                                     text: {
-                                        let d = new Date()
+                                        let d = new Date(chartNow)
                                         d.setHours(d.getHours() - (timeRange - index))
                                         return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2)
                                     }
@@ -656,15 +659,17 @@ PlasmoidItem {
         }
     }
 
-    /** Periodic chart refresh timer – slides horizontal axis when expanded. */
+    /** Periodic chart refresh timer – advances the time window even when RPM is unchanged. */
     Timer {
         interval: kChartRefreshInterval
         repeat: true
         running: expanded
         onTriggered: {
-            if (expanded && Object.keys(fanData).length > 0) {
-                let maxSpd = getMaxFanSpeed()
-                addFanSpeed(maxSpd, false)
+            chartNow = Date.now()
+            chartCanvas.requestPaint()
+
+            if (Object.keys(fanData).length > 0) {
+                addFanSpeed(getMaxFanSpeed(), false)
             }
         }
     }
@@ -685,27 +690,15 @@ PlasmoidItem {
     function addFanSpeed(speed, forceNewPoint) {
         if (typeof forceNewPoint === "undefined") forceNewPoint = false
 
-        let selectedRange = timeRangeOptions.find(option => option.value === timeRange)
-        if (selectedRange) maxHistoryPoints = selectedRange.points
-
         let now = Date.now()
-        let bucketMs = (timeRange * 3600 * 1000) / maxHistoryPoints
 
-        if (fanHistory.length === 0 || forceNewPoint || (now - _lastHistoryTime) >= bucketMs) {
+        // History retention is independent from the selected viewport.
+        // This lets users switch from 2h to 5h/8h without losing older samples.
+        if (fanHistory.length === 0 || forceNewPoint || (now - _lastHistoryTime) >= kHistoryBucketMs) {
             fanHistory.push({ rpm: speed, time: now })
-
-            // Remove points older than the current time range
-            let cutoff = now - (timeRange * 3600 * 1000)
-            while (fanHistory.length > 0 && fanHistory[0].time < cutoff) {
-                fanHistory.shift()
-            }
-            if (fanHistory.length > maxHistoryPoints) {
-                fanHistory.shift()
-            }
-
             _lastHistoryTime = now
         } else {
-            // Update existing latest point for accurate max
+            // Keep the highest RPM seen in the current one-minute bucket.
             let lastIdx = fanHistory.length - 1
             if (speed > fanHistory[lastIdx].rpm) {
                 fanHistory[lastIdx].rpm = speed
@@ -713,16 +706,15 @@ PlasmoidItem {
             fanHistory[lastIdx].time = now
         }
 
-        fanHistoryChanged()
-    }
+        let cutoff = now - (kMaxHistoryHours * 3600 * 1000)
+        while (fanHistory.length > 0 && fanHistory[0].time < cutoff) {
+            fanHistory.shift()
+        }
+        while (fanHistory.length > kMaxHistoryPoints) {
+            fanHistory.shift()
+        }
 
-    /**
-     * Clears fan history and resets the last-history timestamp.
-     * Called when the user changes the time range.
-     */
-    function clearAndResetHistory() {
-        fanHistory = []
-        _lastHistoryTime = 0
+        chartNow = now
         fanHistoryChanged()
     }
 
@@ -792,23 +784,17 @@ pwm1:             N/A`
             for (let line of lines) {
                 line = line.trim()
 
-                // Parse fan speed lines
-                if (line.includes('fan') && line.includes('RPM')) {
-                    let match = line.match(/(.+?):\s*(\d+)\s*RPM/)
-                    if (match && match[1] && match[1].trim().length > 0) {
-                        newFanData[match[1].trim()] = parseInt(match[2])
-                    }
+                // Parse any labelled RPM line. This also handles labels such as "Fan 1".
+                let fanMatch = line.match(/^(.+?):\s*(\d+)\s*RPM\b/i)
+                if (fanMatch && fanMatch[1] && fanMatch[1].trim().length > 0) {
+                    newFanData[fanMatch[1].trim()] = parseInt(fanMatch[2])
                 }
 
-                // Parse temperature lines (exclude threshold info)
-                if (line.includes('°C') && !line.includes('high') && !line.includes('crit') && !line.includes('low')) {
-                    let match = line.match(/(.+?):\s*\+?(-?\d+(?:\.\d+)?)\s*°C/)
-                    if (match && match[1] && match[1].trim().length > 0) {
-                        let tempName = match[1].trim()
-                        if (tempName.includes('Core') || tempName.includes('Package') || tempName.includes('Composite') || tempName.includes('temp')) {
-                            newTempData[tempName] = parseFloat(match[2])
-                        }
-                    }
+                // Parse the first temperature value after a label. lm-sensors commonly
+                // appends "(high = ..., crit = ...)" on the same line, which is valid data.
+                let tempMatch = line.match(/^(.+?):\s*\+?(-?\d+(?:\.\d+)?)\s*°C\b/i)
+                if (tempMatch && tempMatch[1] && tempMatch[1].trim().length > 0) {
+                    newTempData[tempMatch[1].trim()] = parseFloat(tempMatch[2])
                 }
             }
 
