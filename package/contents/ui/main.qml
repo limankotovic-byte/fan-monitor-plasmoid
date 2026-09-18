@@ -197,19 +197,39 @@ PlasmoidItem {
                 }
             }
 
-            Text {
+            Item {
                 width: 45
                 height: 20
                 anchors.verticalCenter: parent.verticalCenter
-                text: {
+
+                property string rpmText: {
                     if (!hasData) return "---"
                     let maxSpeed = getMaxFanSpeed()
                     return maxSpeed > 0 ? maxSpeed.toString() : "---"
                 }
-                font.pixelSize: 14
-                font.bold: true
-                color: colorAccentCyan
-                verticalAlignment: Text.AlignVCenter
+
+                onRpmTextChanged: textCanvasCompact.requestPaint()
+
+                Canvas {
+                    id: textCanvasCompact
+                    anchors.fill: parent
+                    renderStrategy: Canvas.Cooperative
+
+                    onPaint: {
+                        var ctx = getContext("2d")
+                        ctx.clearRect(0, 0, width, height)
+
+                        var gradient = ctx.createLinearGradient(0, 0, width, height)
+                        gradient.addColorStop(0, colorAccentCyan.toString())
+                        gradient.addColorStop(0.5, colorAccentPurple.toString())
+                        gradient.addColorStop(1, colorAccentPink.toString())
+
+                        ctx.fillStyle = gradient
+                        ctx.font = "bold 14px sans-serif"
+                        ctx.textBaseline = "middle"
+                        ctx.fillText(parent.rpmText, 0, height / 2)
+                    }
+                }
             }
         }
 
