@@ -58,7 +58,8 @@ class CompactUiRegressionTests(unittest.TestCase):
         self.assertIsNotNone(compact)
         block = compact.group(1)
         self.assertIn("id: textCanvasCompact", block)
-        self.assertIn("ctx.createLinearGradient(0, 0, width, height)", block)
+        text_canvas = block.split("id: textCanvasCompact", 1)[1]
+        self.assertIn("var gradient = ctx.createLinearGradient(0, 0, width, 0)", text_canvas)
         self.assertIn("gradient.addColorStop(0, colorAccentCyan.toString())", block)
         self.assertIn("gradient.addColorStop(0.5, colorAccentPurple.toString())", block)
         self.assertIn("gradient.addColorStop(1, colorAccentPink.toString())", block)

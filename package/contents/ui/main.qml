@@ -214,12 +214,11 @@ PlasmoidItem {
                     id: textCanvasCompact
                     anchors.fill: parent
                     renderStrategy: Canvas.Cooperative
-
                     onPaint: {
                         var ctx = getContext("2d")
                         ctx.clearRect(0, 0, width, height)
 
-                        var gradient = ctx.createLinearGradient(0, 0, width, height)
+                        var gradient = ctx.createLinearGradient(0, 0, width, 0)
                         gradient.addColorStop(0, colorAccentCyan.toString())
                         gradient.addColorStop(0.5, colorAccentPurple.toString())
                         gradient.addColorStop(1, colorAccentPink.toString())
