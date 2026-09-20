@@ -1,6 +1,6 @@
 # Fan Monitor (KDE Plasma 6 Widget)
 
-![Version](https://img.shields.io/badge/version-1.3.0-blue)
+![Version](https://img.shields.io/badge/version-1.3.1-blue)
 ![Plasma](https://img.shields.io/badge/KDE%20Plasma-6.0%2B-green)
 ![License](https://img.shields.io/badge/license-GPL%20v3.0-orange)
 
@@ -43,9 +43,14 @@ Run the `sensors-detect` command once to ensure your kernel is reading all avail
 sudo sensors-detect
 ```
 
-## What's New in v1.3.0
+## What's New in v1.3.1
+
+- 🧭 Duplicate fan/temperature labels from different hardware chips are preserved instead of overwriting each other
+- 🩺 Failed or empty sensor updates now clear stale live readings and switch the status away from `Connected`
 
 See [CHANGELOG.md](CHANGELOG.md) for the full list of changes.
+
+### Previous v1.3.0 highlights
 
 **Highlights:**
 - 📈 Graph history now keeps up to 8 hours of data regardless of the selected viewport

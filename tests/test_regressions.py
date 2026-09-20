@@ -14,16 +14,43 @@ TEMP_RE = re.compile(r"^(.+?):\s*\+?(-?\d+(?:\.\d+)?)\s*°C\b", re.I)
 
 
 def parse_fixture(text):
-    fans, temps = {}, {}
+    fan_readings, temp_readings = [], []
+    current_chip = ""
+
     for raw in text.splitlines():
         line = raw.strip()
+        if not line:
+            current_chip = ""
+            continue
+        if ":" not in line:
+            current_chip = line
+            continue
+
         m = FAN_RE.match(line)
         if m:
-            fans[m.group(1).strip()] = int(m.group(2))
+            fan_readings.append((m.group(1).strip(), int(m.group(2)), current_chip))
+
         m = TEMP_RE.match(line)
         if m:
-            temps[m.group(1).strip()] = float(m.group(2))
-    return fans, temps
+            temp_readings.append((m.group(1).strip(), float(m.group(2)), current_chip))
+
+    def materialize(readings):
+        counts = {}
+        for label, _, _ in readings:
+            counts[label] = counts.get(label, 0) + 1
+
+        result = {}
+        for label, value, chip in readings:
+            key = f"{chip} / {label}" if counts[label] > 1 and chip else label
+            base = key
+            suffix = 2
+            while key in result:
+                key = f"{base} #{suffix}"
+                suffix += 1
+            result[key] = value
+        return result
+
+    return materialize(fan_readings), materialize(temp_readings)
 
 
 class SensorParserRegressionTests(unittest.TestCase):
@@ -42,6 +69,30 @@ Fan 1:         1200 RPM
     def test_negative_temperature_is_accepted(self):
         _, temps = parse_fixture("temp1: -3.5°C")
         self.assertEqual(temps["temp1"], -3.5)
+
+    def test_duplicate_sensor_labels_from_different_chips_are_preserved(self):
+        sample = """nct6798-isa-0290
+Adapter: ISA adapter
+fan1: 1200 RPM
+
+asus-isa-000a
+Adapter: ISA adapter
+fan1: 2400 RPM
+"""
+        fans, _ = parse_fixture(sample)
+        self.assertEqual(
+            fans,
+            {
+                "nct6798-isa-0290 / fan1": 1200,
+                "asus-isa-000a / fan1": 2400,
+            },
+        )
+
+    def test_failed_sensor_update_clears_stale_live_state(self):
+        self.assertIn('root.clearSensorData("Sensors command failed")', MAIN)
+        self.assertIn("fanData = ({})", MAIN)
+        self.assertIn("tempData = ({})", MAIN)
+        self.assertIn("hasData = false", MAIN)
 
     def test_qml_contains_the_regression_fixed_patterns(self):
         self.assertIn(r'line.match(/^(.+?):\s*(\d+)\s*RPM\b/i)', MAIN)
@@ -95,7 +146,7 @@ class GraphRegressionTests(unittest.TestCase):
 
 class PackageSanityTests(unittest.TestCase):
     def test_metadata_version(self):
-        self.assertEqual(META["KPlugin"]["Version"], "1.3.0")
+        self.assertEqual(META["KPlugin"]["Version"], "1.3.1")
 
     def test_config_xml_is_well_formed(self):
         ET.fromstring(CONFIG)
