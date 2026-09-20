@@ -672,7 +672,7 @@ PlasmoidItem {
             if (data.stdout && data.stdout.length > kMinSensorOutputLen) {
                 root.parseSensorData(data.stdout)
             } else {
-                root.lastError = "Sensors command failed"
+                root.clearSensorData("Sensors command failed")
             }
             root.isUpdating = false
         }
@@ -782,6 +782,39 @@ pwm1:             N/A`
     }
 
     /**
+     * Clears live sensor readings after a failed/invalid update.
+     * History is intentionally preserved so a temporary sensor failure
+     * does not erase the user's graph.
+     * @param {string} message - Human-readable error message.
+     */
+    function clearSensorData(message) {
+        fanData = ({})
+        tempData = ({})
+        hasData = false
+        lastError = message || "No sensor data received"
+    }
+
+    /**
+     * Builds a display key that preserves duplicate sensor labels.
+     * Unique labels stay short; chip names are added only when needed.
+     */
+    function buildSensorKey(target, label, chip, labelCount) {
+        let key = label
+        if (labelCount > 1 && chip) {
+            key = chip + " / " + label
+        }
+
+        if (target[key] === undefined) return key
+
+        let baseKey = key
+        let suffix = 2
+        while (target[baseKey + " #" + suffix] !== undefined) {
+            suffix++
+        }
+        return baseKey + " #" + suffix
+    }
+
+    /**
      * Parses raw output from the `sensors` CLI command.
      * Extracts fan RPM and temperature values using regex.
      * @param {string} output - Raw text output from `sensors`.
@@ -789,32 +822,76 @@ pwm1:             N/A`
     function parseSensorData(output) {
         // Guard: reject empty or invalid input
         if (!output || typeof output !== "string" || output.trim().length === 0) {
-            lastError = "No sensor data received"
-            hasData = false
+            clearSensorData("No sensor data received")
             return
         }
 
         try {
             let newFanData = {}
             let newTempData = {}
+            let fanReadings = []
+            let tempReadings = []
+            let currentChip = ""
 
             let lines = output.split('\n')
 
-            for (let line of lines) {
-                line = line.trim()
+            for (let rawLine of lines) {
+                let line = rawLine.trim()
+
+                if (line.length === 0) {
+                    currentChip = ""
+                    continue
+                }
+
+                // lm-sensors starts each device block with a chip name, followed by
+                // an "Adapter:" line. Sensor value lines themselves contain ':'.
+                if (!line.includes(":")) {
+                    currentChip = line
+                    continue
+                }
 
                 // Parse any labelled RPM line. This also handles labels such as "Fan 1".
                 let fanMatch = line.match(/^(.+?):\s*(\d+)\s*RPM\b/i)
                 if (fanMatch && fanMatch[1] && fanMatch[1].trim().length > 0) {
-                    newFanData[fanMatch[1].trim()] = parseInt(fanMatch[2])
+                    fanReadings.push({
+                        label: fanMatch[1].trim(),
+                        value: parseInt(fanMatch[2]),
+                        chip: currentChip
+                    })
                 }
 
                 // Parse the first temperature value after a label. lm-sensors commonly
                 // appends "(high = ..., crit = ...)" on the same line, which is valid data.
                 let tempMatch = line.match(/^(.+?):\s*\+?(-?\d+(?:\.\d+)?)\s*°C\b/i)
                 if (tempMatch && tempMatch[1] && tempMatch[1].trim().length > 0) {
-                    newTempData[tempMatch[1].trim()] = parseFloat(tempMatch[2])
+                    tempReadings.push({
+                        label: tempMatch[1].trim(),
+                        value: parseFloat(tempMatch[2]),
+                        chip: currentChip
+                    })
                 }
+            }
+
+            // Count labels first so chip names are shown only when two sensors
+            // would otherwise overwrite each other (e.g. fan1 on two controllers).
+            let fanLabelCounts = {}
+            for (let reading of fanReadings) {
+                fanLabelCounts[reading.label] = (fanLabelCounts[reading.label] || 0) + 1
+            }
+
+            let tempLabelCounts = {}
+            for (let reading of tempReadings) {
+                tempLabelCounts[reading.label] = (tempLabelCounts[reading.label] || 0) + 1
+            }
+
+            for (let reading of fanReadings) {
+                let key = buildSensorKey(newFanData, reading.label, reading.chip, fanLabelCounts[reading.label])
+                newFanData[key] = reading.value
+            }
+
+            for (let reading of tempReadings) {
+                let key = buildSensorKey(newTempData, reading.label, reading.chip, tempLabelCounts[reading.label])
+                newTempData[key] = reading.value
             }
 
             fanData = newFanData
@@ -831,8 +908,7 @@ pwm1:             N/A`
                 addFanSpeed(maxFanSpeed)
             }
         } catch (error) {
-            lastError = "Error parsing data: " + error.toString()
-            hasData = false
+            clearSensorData("Error parsing data: " + error.toString())
         }
     }
 
