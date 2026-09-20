@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1] - 2026-09-20
+
+### Sensors & Reliability
+- Preserve multiple sensors with the same label by disambiguating duplicate names with their `lm-sensors` chip name
+- Clear stale fan/temperature readings and drop the `Connected` state when the `sensors` command fails or returns invalid data
+- Added regression coverage for duplicate sensor labels and stale live-state invalidation
+
 ## [1.3.0] - 2026-09-18
 
 ### UI
