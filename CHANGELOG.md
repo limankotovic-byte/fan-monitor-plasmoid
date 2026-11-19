@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Fan Animation
+- Replaced the 10 FPS JavaScript rotation timers with continuous Qt Quick `RotationAnimator` for the compact panel icon and the expanded header icon
+- Preserved the RPM-dependent angular velocity and the existing animation on/off preference
+- Kept sensor polling and chart refresh rates unchanged
+
 ## [1.3.1] - 2026-09-20
 
 ### Sensors & Reliability

@@ -18,7 +18,8 @@ PlasmoidItem {
     // CONSTANTS
     // ==========================================
     readonly property int kMaxRpmScale: 5000          // Y-axis max for chart
-    readonly property int kAnimationFpsInterval: 100  // Animation timer interval (ms), ~10 FPS
+    readonly property int kMinFanDegreesPerSecond: 50  // Match the original fan speed range
+    readonly property int kMaxFanDegreesPerSecond: 300
     readonly property int kMaxRpmForSpeedFactor: 4000 // RPM value mapped to max animation speed
     readonly property int kIdleUpdateInterval: 30000  // Sensor poll interval when panel is closed
     readonly property int kChartRefreshInterval: 30000 // Chart horizontal-slide refresh (ms)
@@ -103,6 +104,17 @@ PlasmoidItem {
         return max
     }
 
+    /**
+     * Full-revolution duration in ms, preserving the old RPM-to-speed mapping
+     * (50..300 degrees/sec) without the 100 ms JavaScript animation timer.
+     */
+    function fanRevolutionDuration(rpm) {
+        const speedFactor = Math.min(1, Math.max(0, rpm) / kMaxRpmForSpeedFactor)
+        const degreesPerSecond = kMinFanDegreesPerSecond
+                               + (kMaxFanDegreesPerSecond - kMinFanDegreesPerSecond) * speedFactor
+        return Math.round(360000 / degreesPerSecond)
+    }
+
     // ==========================================
     // DYNAMIC ICON
     // ==========================================
@@ -145,6 +157,7 @@ PlasmoidItem {
             spacing: 6
 
             Item {
+                id: compactFanRotor
                 width: 22
                 height: 22
                 anchors.verticalCenter: parent.verticalCenter
@@ -186,14 +199,15 @@ PlasmoidItem {
                     }
                 }
 
-                Timer {
-                    interval: kAnimationFpsInterval
-                    running: enableAnimation && parent.currentRpm > 0 && parent.visible
-                    repeat: true
-                    onTriggered: {
-                        let speedFactor = Math.min(1.0, parent.currentRpm / kMaxRpmForSpeedFactor)
-                        parent.rotation = (parent.rotation + 5 + (25 * speedFactor)) % 360
-                    }
+                // Animate the already-drawn fan via Qt Quick's scene graph.
+                RotationAnimator {
+                    target: compactFanRotor
+                    from: 0
+                    to: 360
+                    duration: root.fanRevolutionDuration(compactFanRotor.currentRpm)
+                    easing.type: Easing.Linear
+                    loops: Animation.Infinite
+                    running: root.enableAnimation && compactFanRotor.currentRpm > 0 && compactFanRotor.visible
                 }
             }
 
@@ -273,6 +287,7 @@ PlasmoidItem {
                 spacing: 12
 
                 Item {
+                    id: fullFanRotor
                     width: 32
                     height: 32
 
@@ -313,14 +328,15 @@ PlasmoidItem {
                         }
                     }
 
-                    Timer {
-                        interval: kAnimationFpsInterval
-                        running: enableAnimation && parent.currentRpm > 0 && parent.visible
-                        repeat: true
-                        onTriggered: {
-                            let speedFactor = Math.min(1.0, parent.currentRpm / kMaxRpmForSpeedFactor)
-                            parent.rotation = (parent.rotation + 5 + (25 * speedFactor)) % 360
-                        }
+                    // Animate the already-drawn fan via Qt Quick's scene graph.
+                    RotationAnimator {
+                        target: fullFanRotor
+                        from: 0
+                        to: 360
+                        duration: root.fanRevolutionDuration(fullFanRotor.currentRpm)
+                        easing.type: Easing.Linear
+                        loops: Animation.Infinite
+                        running: root.enableAnimation && fullFanRotor.currentRpm > 0 && fullFanRotor.visible
                     }
                 }
 
