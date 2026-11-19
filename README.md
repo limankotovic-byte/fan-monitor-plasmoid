@@ -14,7 +14,7 @@ A beautiful, translucent fan and temperature monitoring widget for KDE Plasma 6.
   1. `Utterly Sweet (Solid)` — Neon cyberpunk gradients.
   2. `Clean Window (Transparent)` — Borderless, relying purely on KWin's system blur effects.
   3. `Utterly Sweet (Translucent)` — Lighter backdrop, allowing background windows and wallpapers to bleed through.
-- **Optimized Animation Engine:** Animations use QtQuick timers capped at 10 FPS to keep CPU/GPU overhead low. The animation pace dynamically scales with the RPM of your fans!
+- **Smooth Fan Animation:** Qt Quick `RotationAnimator` smoothly rotates the already-painted fan in the panel and popup. Its speed still scales with fan RPM, without a 10 FPS JavaScript timer; rendering can run on the scene-graph thread when supported.
 - **On/Off Toggle:** Optionally freeze animations altogether for 100% peace of mind.
 - **Dynamic Graphical Chart:** Visualize heat fluctuations over the last chosen timeframe (e.g., 2, 5, or 8 hours).
 - **Responsive Status Alerts:** Colors elegantly shift to orange and critical red thresholds.
