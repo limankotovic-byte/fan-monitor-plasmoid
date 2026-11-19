@@ -117,6 +117,25 @@ class CompactUiRegressionTests(unittest.TestCase):
         self.assertIn("ctx.fillText(parent.rpmText, 0, height / 2)", block)
 
 
+class FanAnimationRegressionTests(unittest.TestCase):
+    def test_both_fan_icons_use_render_thread_animators(self):
+        self.assertEqual(MAIN.count("RotationAnimator {"), 2)
+        self.assertIn("id: compactFanRotor", MAIN)
+        self.assertIn("id: fullFanRotor", MAIN)
+        self.assertEqual(MAIN.count("loops: Animation.Infinite"), 2)
+        self.assertEqual(MAIN.count("easing.type: Easing.Linear"), 2)
+        self.assertNotIn("kAnimationFpsInterval", MAIN)
+        self.assertNotIn("parent.rotation = (parent.rotation +", MAIN)
+
+    def test_rpm_to_rotation_speed_mapping_is_preserved(self):
+        self.assertIn("function fanRevolutionDuration(rpm)", MAIN)
+        self.assertIn("readonly property int kMinFanDegreesPerSecond: 50", MAIN)
+        self.assertIn("readonly property int kMaxFanDegreesPerSecond: 300", MAIN)
+        self.assertIn("return Math.round(360000 / degreesPerSecond)", MAIN)
+        self.assertIn("root.enableAnimation && compactFanRotor.currentRpm > 0", MAIN)
+        self.assertIn("root.enableAnimation && fullFanRotor.currentRpm > 0", MAIN)
+
+
 class GraphRegressionTests(unittest.TestCase):
     def test_history_is_independent_of_selected_viewport(self):
         self.assertIn("readonly property int kMaxHistoryHours: 8", MAIN)
